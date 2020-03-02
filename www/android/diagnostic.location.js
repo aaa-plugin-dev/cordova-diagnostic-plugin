@@ -18,6 +18,16 @@ var Diagnostic_Location = (function(){
 
     /********************
      *
+     * Get SDK Version
+     *
+     ********************/
+    var sdkVersion = 29;
+    Diagnostic.sdkVersion(function(version) {
+        sdkVersion = version;
+    });
+
+    /********************
+     *
      * Public properties
      *
      ********************/
@@ -39,9 +49,41 @@ var Diagnostic_Location = (function(){
      ********************/
 
     function combineLocationStatuses(statuses){
-        var coarseStatus = statuses[Diagnostic.permission.ACCESS_COARSE_LOCATION],
-            fineStatus = statuses[Diagnostic.permission.ACCESS_FINE_LOCATION],
-            status;
+        var backgroundStatus = statuses[Diagnostic.permission.ACCESS_BACKGROUND_LOCATION],
+            coarseStatus = statuses[Diagnostic.permission.ACCESS_COARSE_LOCATION],
+            fineStatus = statuses[Diagnostic.permission.ACCESS_FINE_LOCATION];
+            
+        var status = sdkVersion >= 29 
+            ? combineAndroid10LocationStatuses(backgroundStatus, coarseStatus, fineStatus)
+            : combineOlderAndroidLocationStatuses(coarseStatus, fineStatus);
+
+        return status;
+    }
+
+    function combineAndroid10LocationStatuses(backgroundStatus, coarseStatus, fineStatus){
+        var status;
+
+        if(coarseStatus === Diagnostic.permissionStatus.DENIED_ALWAYS || fineStatus === Diagnostic.permissionStatus.DENIED_ALWAYS){
+            status = Diagnostic.permissionStatus.DENIED_ALWAYS;
+        }else if(coarseStatus === Diagnostic.permissionStatus.DENIED_ONCE || fineStatus === Diagnostic.permissionStatus.DENIED_ONCE){
+            status = Diagnostic.permissionStatus.DENIED_ONCE;
+        }else if(coarseStatus === Diagnostic.permissionStatus.NOT_REQUESTED || fineStatus === Diagnostic.permissionStatus.NOT_REQUESTED){
+            status = Diagnostic.permissionStatus.NOT_REQUESTED;
+        }else if (
+                (backgroundStatus === Diagnostic.permissionStatus.NOT_REQUESTED ||
+                 backgroundStatus === Diagnostic.permissionStatus.DENIED_ONCE ||
+                 backgroundStatus === Diagnostic.permissionStatus.DENIED_ALWAYS) &&
+                coarseStatus === Diagnostic.permissionStatus.GRANTED) {
+            status = Diagnostic.permissionStatus.GRANTED_WHEN_IN_USE;
+        } else {
+            status = Diagnostic.permissionStatus.GRANTED;
+        }
+
+        return status;
+    }
+
+    function combineOlderAndroidLocationStatuses(coarseStatus, fineStatus){
+        var status;
 
         if(coarseStatus === Diagnostic.permissionStatus.DENIED_ALWAYS || fineStatus === Diagnostic.permissionStatus.DENIED_ALWAYS){
             status = Diagnostic.permissionStatus.DENIED_ALWAYS;
@@ -52,6 +94,7 @@ var Diagnostic_Location = (function(){
         }else{
             status = Diagnostic.permissionStatus.GRANTED;
         }
+
         return status;
     }
 
@@ -178,6 +221,43 @@ var Diagnostic_Location = (function(){
             []);
     };
 
+        /**
+     * Checks if low-accuracy locations in background are available to the app from network triangulation/WiFi access points.
+     * Returns true if Location mode is enabled and is set to "Battery saving" or "High accuracy"
+     * AND if the app is authorised to use location.
+     *
+     * @param {Function} successCallback -  The callback which will be called when the operation is successful.
+     * This callback function is passed a single boolean parameter which is TRUE if low-accuracy network-based location is available.
+     * @param {Function} errorCallback -  The callback which will be called when the operation encounters an error.
+     *  This callback function is passed a single string parameter containing the error message.
+     */
+    Diagnostic_Location.isBackgroundLocationAvailable = function(successCallback, errorCallback) {
+        return cordova.exec(Diagnostic._ensureBoolean(successCallback),
+            errorCallback,
+            'Diagnostic_Location',
+            'isBackgroundLocationAvailable',
+            []);
+    };
+
+        /**
+     * Checks if the device location setting is set to return low-accuracy locations from network triangulation/WiFi access points.
+     * Returns true if Location mode is enabled and is set to either:
+     * Battery saving = network triangulation and Wifi network IDs (low accuracy)
+     * High accuracy = GPS hardware, network triangulation and Wifi network IDs (high and low accuracy)
+     *
+     * @param {Function} successCallback -  The callback which will be called when the operation is successful.
+     * This callback function is passed a single boolean parameter which is TRUE if device setting is set to return low-accuracy network-based location.
+     * @param {Function} errorCallback -  The callback which will be called when the operation encounters an error.
+     *  This callback function is passed a single string parameter containing the error message.
+     */
+    Diagnostic_Location.isBackgroundLocationEnabled = function(successCallback, errorCallback) {
+        return cordova.exec(Diagnostic._ensureBoolean(successCallback),
+            errorCallback,
+            'Diagnostic_Location',
+            'isBackgroundLocationEnabled',
+            []);
+    };
+
     /**
      * Returns the current location mode setting for the device.
      *
@@ -217,6 +297,7 @@ var Diagnostic_Location = (function(){
             successCallback(combineLocationStatuses(statuses));
         }
         Diagnostic.requestRuntimePermissions(onSuccess, errorCallback, [
+            Diagnostic.permission.ACCESS_BACKGROUND_LOCATION,
             Diagnostic.permission.ACCESS_COARSE_LOCATION,
             Diagnostic.permission.ACCESS_FINE_LOCATION
         ]);
@@ -234,6 +315,7 @@ var Diagnostic_Location = (function(){
             successCallback(combineLocationStatuses(statuses));
         }
         Diagnostic.getPermissionsAuthorizationStatus(onSuccess, errorCallback, [
+            Diagnostic.permission.ACCESS_BACKGROUND_LOCATION,
             Diagnostic.permission.ACCESS_COARSE_LOCATION,
             Diagnostic.permission.ACCESS_FINE_LOCATION
         ]);
@@ -248,7 +330,7 @@ var Diagnostic_Location = (function(){
      */
     Diagnostic_Location.isLocationAuthorized = function(successCallback, errorCallback){
         function onSuccess(status){
-            successCallback(status === Diagnostic.permissionStatus.GRANTED);
+            successCallback(status === Diagnostic.permissionStatus.GRANTED || status === Diagnostic.permissionStatus.GRANTED_WHEN_IN_USE);
         }
         Diagnostic_Location.getLocationAuthorizationStatus(onSuccess, errorCallback);
     };

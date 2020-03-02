@@ -55,6 +55,7 @@ public class Diagnostic_Location extends CordovaPlugin{
 
     private static String gpsLocationPermission = "ACCESS_FINE_LOCATION";
     private static String networkLocationPermission = "ACCESS_COARSE_LOCATION";
+    private static String backgroundLocationPermission = "ACCESS_BACKGROUND_LOCATION";
 
 
     private static final String LOCATION_MODE_HIGH_ACCURACY = "high_accuracy";
@@ -147,13 +148,15 @@ public class Diagnostic_Location extends CordovaPlugin{
                 switchToLocationSettings();
                 callbackContext.success();
             } else if(action.equals("isLocationAvailable")) {
-                callbackContext.success(isGpsLocationAvailable() || isNetworkLocationAvailable() ? 1 : 0);
+                callbackContext.success(isGpsLocationAvailable() || isNetworkLocationAvailable() || isBackgroundLocationAvailable() ? 1 : 0);
             } else if(action.equals("isLocationEnabled")) {
-                callbackContext.success(isGpsLocationEnabled() || isNetworkLocationEnabled() ? 1 : 0);
+                callbackContext.success(isGpsLocationEnabled() || isNetworkLocationEnabled() || isBackgroundLocationEnabled() ? 1 : 0);
             } else if(action.equals("isGpsLocationAvailable")) {
                 callbackContext.success(isGpsLocationAvailable() ? 1 : 0);
             } else if(action.equals("isNetworkLocationAvailable")) {
                 callbackContext.success(isNetworkLocationAvailable() ? 1 : 0);
+            } else if(action.equals("isBackgroundLocationAvailable")) {
+                callbackContext.success(isBackgroundLocationAvailable() ? 1 : 0);
             } else if(action.equals("isGpsLocationEnabled")) {
                 callbackContext.success(isGpsLocationEnabled() ? 1 : 0);
             } else if(action.equals("isNetworkLocationEnabled")) {
@@ -194,6 +197,19 @@ public class Diagnostic_Location extends CordovaPlugin{
         int mode = getLocationMode();
         boolean result = (mode == 3 || mode == 2);
         diagnostic.logDebug("Network location setting enabled: " + result);
+        return result;
+    }
+
+    public boolean isBackgroundLocationAvailable() throws Exception {
+        boolean result =  isBackgroundLocationEnabled() && isBackgroundLocationAuthorized();
+        diagnostic.logDebug("Background location available: " + result);
+        return result;
+    }
+
+    public boolean isBackgroundLocationEnabled() throws Exception {
+        int mode = getLocationMode();
+        boolean result = (mode == 3 || mode == 2);
+        diagnostic.logDebug("Background location setting enabled: " + result);
         return result;
     }
 
@@ -265,9 +281,30 @@ public class Diagnostic_Location extends CordovaPlugin{
     }
 
     private boolean isLocationAuthorized() throws Exception {
-        boolean authorized = diagnostic.hasPermission(diagnostic.permissionsMap.get(gpsLocationPermission)) || diagnostic.hasPermission(diagnostic.permissionsMap.get(networkLocationPermission));
+        boolean authorized = isOlderAndroidLocationAuthorized();
         Log.v(TAG, "Location permission is "+(authorized ? "authorized" : "unauthorized"));
         return authorized;
+    }
+
+    private boolean isBackgroundLocationAuthorized() throws Exception {
+        boolean authorized = Build.VERSION.SDK_INT >= 29
+                ? isAndroid10LocationAuthorized() 
+                : isOlderAndroidLocationAuthorized();
+        Log.v(TAG, "Location permission is "+(authorized ? "authorized" : "unauthorized"));
+        return authorized;  
+    }
+
+    private boolean isOlderAndroidLocationAuthorized() throws Exception {
+        boolean authorized = diagnostic.hasPermission(diagnostic.permissionsMap.get(gpsLocationPermission)) || 
+                             diagnostic.hasPermission(diagnostic.permissionsMap.get(networkLocationPermission));
+        return authorized;        
+    }
+
+    private boolean isAndroid10LocationAuthorized() throws Exception {
+         boolean authorized = diagnostic.hasPermission(diagnostic.permissionsMap.get(gpsLocationPermission)) || 
+                              diagnostic.hasPermission(diagnostic.permissionsMap.get(networkLocationPermission)) ||
+                              diagnostic.hasPermission(diagnostic.permissionsMap.get(backgroundLocationPermission));
+        return authorized;       
     }
 
     private boolean isLocationProviderEnabled(String provider) {

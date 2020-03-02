@@ -87,6 +87,7 @@ public class Diagnostic extends CordovaPlugin{
         Diagnostic.addBiDirMapEntry(_permissionsMap, "GET_ACCOUNTS", Manifest.permission.GET_ACCOUNTS);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_FINE_LOCATION", Manifest.permission.ACCESS_FINE_LOCATION);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_COARSE_LOCATION", Manifest.permission.ACCESS_COARSE_LOCATION);
+        Diagnostic.addBiDirMapEntry(_permissionsMap, "ACCESS_BACKGROUND_LOCATION", Manifest.permission.ACCESS_BACKGROUND_LOCATION);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "RECORD_AUDIO", Manifest.permission.RECORD_AUDIO);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "READ_PHONE_STATE", Manifest.permission.READ_PHONE_STATE);
         Diagnostic.addBiDirMapEntry(_permissionsMap, "CALL_PHONE", Manifest.permission.CALL_PHONE);
@@ -242,6 +243,8 @@ public class Diagnostic extends CordovaPlugin{
                 callbackContext.success(isADBModeEnabled() ? 1 : 0);
             } else if(action.equals("isDeviceRooted")) {
                 callbackContext.success(isDeviceRooted() ? 1 : 0);
+            } else if(action.equals("sdkVersion")) {
+                callbackContext.success(Build.VERSION.SDK_INT);
             } else if(action.equals("restart")) {
                 this.restart(args);
             } else if(action.equals("getArchitecture")) {

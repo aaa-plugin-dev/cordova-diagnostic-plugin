@@ -462,7 +462,8 @@ The function is passed a single string parameter containing the error message.
         console.error("The following error occurred: "+error);
     },[
         cordova.plugins.diagnostic.permission.ACCESS_FINE_LOCATION,
-        cordova.plugins.diagnostic.permission.ACCESS_COARSE_LOCATION
+        cordova.plugins.diagnostic.permission.ACCESS_COARSE_LOCATION,
+        cordova.plugins.diagnostic.permission.ACCESS_BACKGROUND_LOCATION
     ]);
 
 ### requestRuntimePermission()
@@ -541,7 +542,8 @@ The function is passed a single string parameter containing the error message.
         console.error("The following error occurred: "+error);
     },[
         cordova.plugins.diagnostic.permission.ACCESS_FINE_LOCATION,
-        cordova.plugins.diagnostic.permission.ACCESS_COARSE_LOCATION
+        cordova.plugins.diagnostic.permission.ACCESS_COARSE_LOCATION,
+        cordova.plugins.diagnostic.permission.ACCESS_BACKGROUND_LOCATION
     ]);
 
 ### isRequestingPermission()
@@ -3175,6 +3177,7 @@ You can add these permissions either by manually editing the AndroidManifest.xml
         <custom-config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
             <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
         </custom-config-file>
     </platform>
     
@@ -3201,6 +3204,7 @@ The plugin defines the [full list of dangersous permissions available in API 23]
 - `cordova.plugins.diagnostic.permission.GET_ACCOUNTS`
 - `cordova.plugins.diagnostic.permission.ACCESS_FINE_LOCATION`
 - `cordova.plugins.diagnostic.permission.ACCESS_COARSE_LOCATION`
+- `cordova.plugins.diagnostic.permission.ACCESS_BACKGROUND_LOCATION`
 - `cordova.plugins.diagnostic.permission.RECORD_AUDIO`
 - `cordova.plugins.diagnostic.permission.READ_PHONE_STATE`
 - `cordova.plugins.diagnostic.permission.CALL_PHONE`
@@ -3237,7 +3241,7 @@ Permissions are grouped as follows:
     CALENDAR: [READ_CALENDAR, WRITE_CALENDAR],
     CAMERA: [CAMERA],
     CONTACTS: [READ_CONTACTS, WRITE_CONTACTS, GET_ACCOUNTS],
-    LOCATION: [ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION],
+    LOCATION: [ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, ACCESS_BACKGROUND_LOCATION],
     MICROPHONE: [RECORD_AUDIO],
     PHONE: [READ_PHONE_STATE, CALL_PHONE, ADD_VOICEMAIL, USE_SIP, PROCESS_OUTGOING_CALLS, READ_CALL_LOG, WRITE_CALL_LOG],
     SENSORS: [BODY_SENSORS],
